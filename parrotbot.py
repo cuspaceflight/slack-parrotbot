@@ -12,6 +12,7 @@ app = App(token=open("SLACK_BOT_TOKEN").read())
 def parrot_command(ack, body, say):
     try:
         response = pmaker.to_parrots(body['text'])
+        say(f"Message from <@{body['user_id']}>:")
         say(response)
         ack()
     except Exception as e:
