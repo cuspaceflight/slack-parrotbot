@@ -55,13 +55,7 @@ def parrot(client, ack, body, say):
     try:
         say(f"<@{body['user_id']}> has summoned the parrot gods, "
             f"and in response they say")
-        data = say("loading...").data
-
-        client.chat_update(
-            channel=data['channel'],
-            ts=data['ts'],
-            text=pmaker.to_parrots(body['text']))
-
+        say(pmaker.to_parrots(body['text']))
         ack()
     except Exception as e:
         response = str(e)

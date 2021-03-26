@@ -28,8 +28,6 @@ class ParrotMaker:
 
 
     def to_parrots(self, string):
-        print(string)
         self.tb.update_text(string)
-        print(self.tb)
         return str(self.tb).replace('x', self.fg).replace('.', self.bg)
 
