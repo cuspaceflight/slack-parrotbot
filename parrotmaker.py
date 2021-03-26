@@ -1,6 +1,8 @@
+import re
+from sys import argv
+
 from fontmap import fonts
 from display import TextBuffer
-import re
 
 
 class ParrotMaker:
@@ -30,4 +32,13 @@ class ParrotMaker:
     def to_parrots(self, string):
         self.tb.update_text(string)
         return str(self.tb).replace('x', self.fg).replace('.', self.bg)
+
+
+if __name__ == "__main__":
+    if len(argv) < 2:
+        print("Argument required")
+        raise SystemExit
+
+    pmaker = ParrotMaker()
+    print(pmaker.to_parrots(" ".join(argv[1:])))
 
