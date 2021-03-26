@@ -1,0 +1,35 @@
+from fontmap import fonts
+from display import TextBuffer
+import re
+
+
+class ParrotMaker:
+    def __init__(self, fmap=fonts[0], max_width=30,
+                 bg=":fireparrot:", fg=":partyparrot:"):
+        self.fg = fg
+        self.bg = bg
+
+        if not isinstance(fmap, dict):
+            raise TypeError("fmap must be a dict")
+        if not all(chr(x) in fmap for x in range(ord("A"), ord("Z") + 1)):
+            raise ValueError("fmap must contain A-Z")
+
+        char_width = len(fmap["A"].split("\n")[0])
+        if not all(len(fmap[chr(x)].split("\n")[0]) == char_width
+                for x in range(ord("A"), ord("Z") + 1)):
+            raise ValueError("Letters must be constant width")
+
+        char_height = len(fmap["A"].split("\n"))
+        if not all(len(fmap[chr(x)].split("\n")) == char_height
+                for x in range(ord("A"), ord("Z") + 1)):
+            raise ValueError("Letters must be constant height")
+
+        self.tb = TextBuffer(fmap, max_width)
+
+
+    def to_parrots(self, string):
+        print(string)
+        self.tb.update_text(string)
+        print(self.tb)
+        return str(self.tb).replace('x', self.fg).replace('.', self.bg)
+

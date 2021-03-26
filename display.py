@@ -37,6 +37,7 @@ class TextBuffer(FrameBuffer):
             raise ValueError("String must be a-z (lower or upper) or spaces")
 
         screenwidth = min(len(string), self.width)
+        screenwidth = self.width
 
         cursor_x = 0
         charmap = [""]
