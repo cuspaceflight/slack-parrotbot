@@ -1,3 +1,4 @@
-__pycache__
-secrets
-parrotbot-env
+/__pycache__
+/secrets
+/parrotbot-env
+/gdrive
