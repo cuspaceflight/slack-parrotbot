@@ -12,7 +12,7 @@ class Pong:
         self.fb = FrameBuffer(self.w, self.h)
 
         self.players = []
-        
+
         self.p1 = self.h // 2 - self.paddlesize // 2
         self.p2 = self.p1
 
