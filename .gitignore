@@ -2,3 +2,5 @@
 /secrets
 /parrotbot-env
 /gdrive
+/log_stdout
+/log_stderr
