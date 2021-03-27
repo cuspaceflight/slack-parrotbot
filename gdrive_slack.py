@@ -13,7 +13,7 @@ def handle_file_shared(client, event, say, ack):
 
     # wrap in sh -c in case the system shell is something stupid and non-posix
     msg_data = say(f"File uploading to "
-                   f"{dir_path.removeprefix('gdrive/.shared/')}...").data
+                   f"{dir_path[15:]}...").data
     Thread(target  = download_file,
            args    = (client, dir_path, file_data, msg_data)).start()
     ack()
@@ -34,4 +34,4 @@ def download_file(client, dir_path, file_data, msg_data):
             channel  = msg_data['channel'],
             ts       = msg_data['ts'],
             text     = f"File uploaded to "
-                       f"{dir_path.removeprefix('gdrive/.shared/')}")
+                       f"{dir_path[15:]}")
