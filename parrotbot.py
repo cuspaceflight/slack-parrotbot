@@ -7,13 +7,19 @@ import gdrive_slack
 
 @app.command("/parrotcheckhealth")
 def parrotcheckhealth(client, ack, body, say):
-    say(f"I'm running! Here is my terminal output: \n"
-        "stdout\n```\n"
-      + open("log_stdout").read()
-      + "```\nstderr\n```\n"
-      + open("log_stderr").read()
-      + "```")
-    ack()
+
+    t = "I'm running! Here is my terminal output: \n" \
+        "stdout\n```\n" \
+      + open("log_stdout").read() \
+      + "```\nstderr\n```\n" \
+      + open("log_stderr").read() \
+      + "```"
+
+    if "quiet" in body['text']:
+        ack(t)
+    else:
+        say(t)
+        ack()
 
 if __name__ == "__main__":
     for chan in app.client.conversations_list()['channels']:
