@@ -8,30 +8,35 @@ def handle_file_shared(client, event, say, ack):
     file_data = client.files_info(file = event["file_id"]).data["file"]
     user_data = client.users_info(user = event["user_id"]).data["user"]
 
-    dir_path = f"gdrive/.shared/CUSF/slack-staging/{user_data['real_name']}" \
+    dir_path = f"/var/opt/slack-parrotbot/files/{user_data['real_name']}" \
             .replace(" ","_")
 
-    # wrap in sh -c in case the system shell is something stupid and non-posix
+    # Hardcoded slice here
     msg_data = say(f"File uploading to "
-                   f"{dir_path[15:]}...").data
+                   f"CUSF/slack-staging{dir_path[30:]}...").data
     Thread(target  = download_file,
            args    = (client, dir_path, file_data, msg_data)).start()
     ack()
 
 
 def download_file(client, dir_path, file_data, msg_data):
+    # wrap in sh -c in case the system shell is something stupid and non-posix
     os.system(f"""sh -c '
 
         mkdir -p "{dir_path}"
         cd "{dir_path}"
 
-        wget --header="Authorization: Bearer {open("SLACK_BOT_TOKEN").read()}"\
+        wget --header="Authorization: Bearer {open("/opt/slack-parrotbot/secrets/SLACK_BOT_TOKEN").read()}"\
+        wget --header="Authorization: Bearer {open("/opt/slack-parrotbot/secrets/SLACK_BOT_TOKEN").read()}"\
             {file_data["url_private_download"]}
 
         cd - >/dev/null
+
+        rclone sync --drive-shared-with-me /var/opt/slack-parrotbot/files parrotbot-gdrive:CUSF/slack-staging
     '""")
+    # Hardcoded slice here
     client.chat_update(
             channel  = msg_data['channel'],
             ts       = msg_data['ts'],
             text     = f"File uploaded to "
-                       f"{dir_path[15:]}")
+                       f"CUSF/slack-staging{dir_path[30:]}")

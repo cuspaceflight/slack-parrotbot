@@ -10,9 +10,9 @@ def parrotcheckhealth(client, ack, body, say):
 
     t = "I'm running! Here is my terminal output: \n" \
         "stdout\n```\n" \
-      + open("log_stdout").read() \
+      + open("/var/opt/slack-parrotbot/stdout").read() \
       + "```\nstderr\n```\n" \
-      + open("log_stderr").read() \
+      + open("/var/opt/slack-parrotbot/stderr").read() \
       + "```"
 
     if "quiet" in body['text']:
@@ -26,4 +26,5 @@ if __name__ == "__main__":
         if not (chan['is_im'] or chan['is_member'] or chan['is_archived']):
             app.client.conversations_join(channel=chan['id'])
 
-    SocketModeHandler(app, open("SLACK_APP_TOKEN").read()).start()
+    SocketModeHandler(app, open("/opt/slack-parrotbot/secrets/SLACK_APP_TOKEN").read()).start()
+    SocketModeHandler(app, open("/opt/slack-parrotbot/secrets/SLACK_APP_TOKEN").read()).start()
