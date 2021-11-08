@@ -32,7 +32,9 @@ def download_file(client, dir_path, file_data, msg_data):
 
         cd - >/dev/null
 
-        rclone sync --drive-shared-with-me /var/opt/slack-parrotbot/files parrotbot-gdrive:CUSF/slack-staging
+        # wait for the last operation to finish
+        while pgrep rclone; do sleep 1; done
+        rclone sync /var/opt/slack-parrotbot/files parrotbot-gdrive:slack-staging
     '""")
     # Hardcoded slice here
     client.chat_update(
