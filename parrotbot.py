@@ -50,5 +50,4 @@ if __name__ == "__main__":
             app.client.conversations_join(channel=chan['id'])
 
     SocketModeHandler(app, open("/opt/slack-parrotbot/secrets/SLACK_APP_TOKEN").read()).start()
-    SocketModeHandler(app, open("/opt/slack-parrotbot/secrets/SLACK_APP_TOKEN").read()).start()
 
