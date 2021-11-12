@@ -27,7 +27,6 @@ def download_file(client, dir_path, file_data, msg_data):
         cd "{dir_path}"
 
         wget --header="Authorization: Bearer {open("/opt/slack-parrotbot/secrets/SLACK_BOT_TOKEN").read()}"\
-        wget --header="Authorization: Bearer {open("/opt/slack-parrotbot/secrets/SLACK_BOT_TOKEN").read()}"\
             {file_data["url_private_download"]}
 
         cd - >/dev/null
