@@ -1,4 +1,6 @@
 /__pycache__
+*.pyc
+
 /secrets
 /parrotbot-env
 /gdrive

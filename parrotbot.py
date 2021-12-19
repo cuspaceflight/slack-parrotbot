@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 from shared import app
 import parrotmaker_slack
 import pong_slack
 import gdrive_slack
+
+print("Starting parrotbot...", flush=True)
 
 @app.command("/parrotcheckhealth")
 def parrotcheckhealth(client, ack, body, say):
@@ -33,7 +37,9 @@ def parrotcheckhealth(client, ack, body, say):
 
     if "quiet" in body['text']:
         ack("I'm running! Here is my latest stderr:" \
-            "\n```\n" + stderr_messages[-1] + '```')
+            "\n```\n" + stderr_messages[-1] + '```'
+            "\nAnd stdout:" \
+            "\n```\n" + stdout_messages[-1] + '```')
     else:
         say("I'm running! Here is my terminal output:" \
             "\nstdout:")
@@ -44,10 +50,29 @@ def parrotcheckhealth(client, ack, body, say):
             say("\n```\n" + msg + '```', unfurl_media = False, unfurl_links=False)
         ack()
 
+####### TODO: THIS ISN'T WORKING
+@app.event("channel_created")
+def handle_file_shared(client, event, ack):
+    print('hello there', flush=True)
+    if not chan['is_im']:
+        chan=event['channel']
+        app.client.conversations_join(channel=chan['id'])
+        print(f"{datetime.now().isoformat()}: Joined {chan['name']}",
+                flush=True)
+    ack()
+
+
 if __name__ == "__main__":
-    for chan in app.client.conversations_list()['channels']:
-        if not (chan['is_im'] or chan['is_member'] or chan['is_archived']):
-            app.client.conversations_join(channel=chan['id'])
+    # why no do while python??
+    cursor = None
+    while cursor != '':
+        conversations = app.client.conversations_list(cursor=cursor)
+        for chan in conversations['channels']:
+            if not (chan['is_im'] or chan['is_member'] or chan['is_archived']):
+                app.client.conversations_join(channel=chan['id'])
+                print(f"{datetime.now().isoformat()}: Joined {chan['name']}",
+                        flush=True)
+        cursor = conversations['response_metadata']['next_cursor']
 
     SocketModeHandler(app, open("/opt/slack-parrotbot/secrets/SLACK_APP_TOKEN").read()).start()
 
