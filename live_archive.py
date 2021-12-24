@@ -10,6 +10,7 @@ archive_path = Path(open("ARCHIVE_PATH").read())
 
 
 def timestamp_to_date_string(ts):
+    """Converts a Slack timestamp into an ISO date (used in naming the daily JSON logs)"""
     if isinstance(ts, float):
         return datetime.fromtimestamp(ts).date().isoformat()
     elif isinstance(ts, str):
@@ -19,6 +20,7 @@ def timestamp_to_date_string(ts):
 
 
 def channel_id_to_name(channel_id):
+    """Gets the current name of the channel with ID 'channel_id'"""
     res = app.client.conversations_info(channel=channel_id)
     if "ok" not in res or not res["ok"]:
         print(f"Error message:{res}", file=sys.stderr)
@@ -28,13 +30,14 @@ def channel_id_to_name(channel_id):
 
 
 def log_file_path(channel_id, ts):
+    """Returns a Path object pointing to the JSON logfile of a message with timestamp 'ts' in channel 'channel_id"""
     channel_name = channel_id_to_name(channel_id)
     return archive_path / channel_name / (timestamp_to_date_string(ts) + ".json")
 
 @app.event("message")
 def archive_message(message, say):
-    """Runs on every message, archiving them"""
-    print("Message received")
+    """Runs on every message event and archives it if it's not hidden"""
+    # print("Message received")
 
     # As message events are sent before 'channel_rename' events we're dealing with them here
     # Otherwise the program would still need to handle it to put it in the correct folder
@@ -52,7 +55,7 @@ def archive_message(message, say):
         parent_user_id = message['parent_user_id']
         add_thread_reply(message['channel'], thread_ts, message['user'], message['ts'])
 
-    print(message)
+    # print(message)
     if "hidden" in message:
         if not message['hidden']:
             add_to_archive(message)
@@ -63,6 +66,7 @@ def archive_message(message, say):
 
 
 def update_message(channel_id, ts, updated_message):
+    """Replaces message with timestamp 'ts' in channel 'channel_id' with updated message"""
     with open(log_file_path(channel_id, ts), 'r+') as log_file:
         message_list = json.load(log_file)
         for message in message_list:
@@ -79,7 +83,7 @@ def update_message(channel_id, ts, updated_message):
 
 
 def add_thread_reply(channel_id, thread_ts, reply_user, reply_ts):
-
+    """Adds a thread reply object to an archived message"""
     with open(log_file_path(channel_id, thread_ts), 'r+') as log_file:
         message_list = json.load(log_file)
         message = next((m for m in message_list if m['ts'] == thread_ts), None)
@@ -117,6 +121,7 @@ def add_thread_reply(channel_id, thread_ts, reply_user, reply_ts):
 
 
 def rename_channel(channel_id, old_name, new_name):
+    """Renames channel folders and updates channel.json"""
     channel_list_path = archive_path / "channels.json"
 
     with open(channel_list_path, 'r+') as channel_list:
@@ -131,7 +136,7 @@ def rename_channel(channel_id, old_name, new_name):
         json.dump(old_channel_list, channel_list, indent=4)
         channel_list.truncate()
 
-    print(f"Channel rename event from {old_name} to {new_name}")
+    # print(f"Channel rename event from {old_name} to {new_name}")
     if old_name is not None:
         old_path = archive_path / old_name
         new_path = archive_path / new_name
@@ -142,7 +147,7 @@ def rename_channel(channel_id, old_name, new_name):
 
 @app.event("channel_created")
 def create_channel(client, payload):
-
+    """On channel creation, if it's an actual channel joins then adds it into channels.json"""
     channel = payload['channel']
     id = channel['id']
 
@@ -159,7 +164,7 @@ def create_channel(client, payload):
             print(f"Error message: {res}", file=sys.stderr)
             raise ConnectionError(f"Could not join channel with id = {id}")
 
-        print(f'Channel {channel["name"]} created')
+        # print(f'Channel {channel["name"]} created')
 
         channel_list_path = archive_path / "channels.json"
         with open(channel_list_path, 'r+') as channel_list:
@@ -172,6 +177,7 @@ def create_channel(client, payload):
 
 @app.event("reaction_added")
 def add_reaction(client, payload):
+    """Adds reaction to the archived message"""
     reaction = payload['reaction']
     reacting_user = payload['user']
 
@@ -207,6 +213,7 @@ def add_reaction(client, payload):
 
 @app.event("reaction_removed")
 def remove_reaction(payload):
+    """Removes reaction from an archived message"""
     reaction = payload['reaction']
     reacting_user = payload['user']
 
@@ -246,9 +253,7 @@ def remove_reaction(payload):
 
 
 def add_to_archive(message):
-    """Finds other information to place message correctly in archives"""
-
-
+    """Archives a message"""
 
     channel_id = message['channel']
     ts = message['ts']
