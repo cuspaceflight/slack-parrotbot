@@ -1,10 +1,9 @@
 import json
 import sys
-import shutil
 
-from shared import app
 from datetime import datetime
 from pathlib import Path
+from shared import app
 
 archive_path = Path(open("ARCHIVE_PATH").read())
 
@@ -35,7 +34,7 @@ def log_file_path(channel_id, ts):
     return archive_path / channel_name / (timestamp_to_date_string(ts) + ".json")
 
 @app.event("message")
-def archive_message(message, say):
+def archive_message(message):
     """Runs on every message event and archives it if it's not hidden"""
     # print("Message received")
 
@@ -149,20 +148,20 @@ def rename_channel(channel_id, old_name, new_name):
 def create_channel(client, payload):
     """On channel creation, if it's an actual channel joins then adds it into channels.json"""
     channel = payload['channel']
-    id = channel['id']
+    channel_id = channel['id']
 
     # Get all detailed channel object
-    res = client.conversations_info(channel=id)
+    res = client.conversations_info(channel=channel_id)
     if "ok" not in res or not res['ok']:
         print(f"Error message: {res}", file=sys.stderr)
-        raise ConnectionError(f"Could not get channel info with id = {id}")
+        raise ConnectionError(f"Could not get channel info with id = {channel_id}")
     full_channel_info = res["channel"]
     if full_channel_info['is_channel']:
         # Join channel if created
-        res = client.conversations_join(channel=id)
+        res = client.conversations_join(channel=channel_id)
         if "ok" not in res or not res['ok']:
             print(f"Error message: {res}", file=sys.stderr)
-            raise ConnectionError(f"Could not join channel with id = {id}")
+            raise ConnectionError(f"Could not join channel with id = {channel_id}")
 
         # print(f'Channel {channel["name"]} created')
 
@@ -176,7 +175,7 @@ def create_channel(client, payload):
 
 
 @app.event("reaction_added")
-def add_reaction(client, payload):
+def add_reaction(payload):
     """Adds reaction to the archived message"""
     reaction = payload['reaction']
     reacting_user = payload['user']
