@@ -6,6 +6,8 @@ from shared import app
 import parrotmaker_slack
 import pong_slack
 import gdrive_slack
+import live_archive
+
 
 print("Starting parrotbot...", flush=True)
 
