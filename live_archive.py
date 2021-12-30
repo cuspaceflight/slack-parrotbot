@@ -3,9 +3,9 @@ import sys
 
 from datetime import datetime
 from pathlib import Path
-from shared import app
+from shared import app, config
 
-archive_path = Path(open("ARCHIVE_PATH").read())
+archive_path = Path(shared.config['archive_path']))
 
 
 def timestamp_to_date_string(ts):
@@ -50,11 +50,9 @@ def archive_message(message):
     # Cannot filter on subtype as no subtype field is omitted due to bug in Slack API
     # See here: https://api.slack.com/events/message/message_replied
     if "thread_ts" in message:
-        thread_ts = message['thread_ts']
-        parent_user_id = message['parent_user_id']
-        add_thread_reply(message['channel'], thread_ts, message['user'], message['ts'])
+        add_thread_reply(message['channel'], message['thread_ts'],
+                         message['user'], message['ts'])
 
-    # print(message)
     if "hidden" in message:
         if not message['hidden']:
             add_to_archive(message)
@@ -135,13 +133,13 @@ def rename_channel(channel_id, old_name, new_name):
         json.dump(old_channel_list, channel_list, indent=4)
         channel_list.truncate()
 
-    # print(f"Channel rename event from {old_name} to {new_name}")
+    print(f"Channel rename event from {old_name} to {new_name}")
     if old_name is not None:
         old_path = archive_path / old_name
         new_path = archive_path / new_name
         old_path.rename(new_path)
     else:
-        print(f"Has not found channel with id = {channel_id} in channels.json")
+        print(f"Warning: Attempted to rename channel id {channel_id}, but it doesn't exist")
 
 
 @app.event("channel_created")
@@ -163,7 +161,7 @@ def create_channel(client, payload):
             print(f"Error message: {res}", file=sys.stderr)
             raise ConnectionError(f"Could not join channel with id = {channel_id}")
 
-        # print(f'Channel {channel["name"]} created')
+        print(f'Channel {channel["name"]} created')
 
         channel_list_path = archive_path / "channels.json"
         with open(channel_list_path, 'r+') as channel_list:
