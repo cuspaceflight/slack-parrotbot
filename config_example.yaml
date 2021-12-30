@@ -1,0 +1,19 @@
+slack_app_token: xapp-...
+slack_bot_token: xoxb-...
+
+features_enabled:
+  - live_archive
+  - parrotmaker
+  - pong
+  - gdrive
+
+live_archive:
+  archive_path: /var/opt/slack-parrotbot/slack-archive
+
+gdrive:
+  local_path: /var/opt/slack-parrotbot/files
+  remote_path: parrotbot-gdrive:"999 Slack Staging"
+  remote_nice_name: 999 Slack Staging
+
+log:
+  command: journalctl -u slack-parrotbot

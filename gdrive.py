@@ -2,7 +2,7 @@ import os
 from threading import Thread
 from datetime import datetime
 
-from shared import app
+from shared import app, config
 
 @app.event("file_shared")
 def handle_file_shared(client, event, say, ack):
@@ -11,16 +11,14 @@ def handle_file_shared(client, event, say, ack):
     print(datetime.now().isoformat(), ": File shared by ",
           user_data['real_name'], flush=True)
 
-    dir_path = f"/var/opt/slack-parrotbot/files/{user_data['real_name']}" \
-            .replace(" ","_")
+    normalised_name = user_data['real_name'].replace(" ", "_")
+    dir_path = f"{config['gdrive']['local_path']/{normalised_name}"
 
-    # Hardcoded slice here
     msg_data = say(f"File uploading to "
-                   f"CUSF/999 Slack Staging{dir_path[30:]}...").data
+                   f"{remote_nice_name}/{normalised_name}...").data
     Thread(target  = download_file,
            args    = (client, dir_path, file_data, msg_data)).start()
     ack()
-
 
 def download_file(client, dir_path, file_data, msg_data):
     # wrap in sh -c in case the system shell is something stupid and non-posix
@@ -29,18 +27,17 @@ def download_file(client, dir_path, file_data, msg_data):
         mkdir -p "{dir_path}"
         cd "{dir_path}"
 
-        wget --header="Authorization: Bearer {open("/opt/slack-parrotbot/secrets/SLACK_BOT_TOKEN").read()}"\
+        wget --header="Authorization: Bearer {config['slack_bot_token']}"\
             {file_data["url_private_download"]}
 
         cd - >/dev/null
 
         # wait for the last operation to finish
         while pgrep rclone; do sleep 1; done
-        rclone sync /var/opt/slack-parrotbot/files parrotbot-gdrive:"999 Slack Staging"
+        rclone sync {config['gdrive']['local_path']} {config['gdrive']['remote_path']}
     '""")
-    # Hardcoded slice here
     client.chat_update(
             channel  = msg_data['channel'],
             ts       = msg_data['ts'],
             text     = f"File uploaded to "
-                       f"CUSF/999 Slack Staging{dir_path[30:]}")
+                       f"{remote_nice_name}/{normalised_name}")

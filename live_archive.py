@@ -4,9 +4,9 @@ from datetime import datetime
 from pathlib import Path
 from threading import Lock, get_ident
 
-from shared import app
+from shared import *
 
-archive_path = Path(open("ARCHIVE_PATH").read())
+archive_path = Path(config['live_archive']['archive_path'])
 file_locks = {}
 
 def timestamp_to_date_string(ts):
@@ -37,7 +37,7 @@ def log_file_path(channel_id, ts):
 @app.event("message")
 def archive_message(message):
     """Runs on every message event and archives it if it's not hidden"""
-    # print("Message received")
+    # print("Message received", flush=True)
 
     # As message events are sent before 'channel_rename' events we're dealing with them here
     # Otherwise the program would still need to handle it to put it in the correct folder
@@ -111,7 +111,7 @@ def add_thread_reply(channel_id, thread_ts, reply_user, reply_ts):
                 # Though not sure how relevant this is, as slack-export-viewer does not seem to care
         else:
             print(f"Received reply to thread (channel={channel_id}, ts={reply_ts}) but have not found"
-                   f"original thread with ts = {thread_ts}.", file=sys.stderr)
+                   f"original thread with ts = {thread_ts}.", file=sys.stderr, flush=True)
         # Go back to start and write
         log_file.seek(0)
         json.dump(message_list, log_file, indent=4)
@@ -129,18 +129,18 @@ def rename_channel(channel_id, old_name, new_name):
             channel['name'] = new_name
         else:
             print(f"Renamed channel (id={channel_id}) from {old_name} to {new_name},"
-                   f"but have not found channel with id on channels.json", file=sys.stderr)
+                   f"but have not found channel with id on channels.json", file=sys.stderr, flush=True)
         channel_list.seek(0)
         json.dump(old_channel_list, channel_list, indent=4)
         channel_list.truncate()
 
-    print(f"Channel rename event from {old_name} to {new_name}")
+    print(f"Channel rename event from {old_name} to {new_name}", flush=True)
     if old_name is not None:
         old_path = archive_path / old_name
         new_path = archive_path / new_name
         old_path.rename(new_path)
     else:
-        print(f"Warning: Attempted to rename channel id {channel_id}, but it doesn't exist")
+        print(f"Warning: Attempted to rename channel id {channel_id}, but it doesn't exist", flush=True)
 
 
 @app.event("channel_created")
@@ -162,7 +162,7 @@ def create_channel(client, payload):
             print(f"Error message: {res}", file=sys.stderr, flush=True)
             raise ConnectionError(f"Could not join channel with id = {channel_id}")
 
-        print(f'Channel {channel["name"]} created')
+        print(f'Channel {channel["name"]} created', flush=True)
 
         channel_list_path = archive_path / "channels.json"
         with open(channel_list_path, 'r+') as channel_list:
@@ -202,7 +202,7 @@ def add_reaction(payload):
                     message['reactions'] = [new_reaction_entry]
             else:
                 print(f"Reaction {reaction} added to message (ts={parent_ts}, channel={parent_channel_id}), "
-                      f"but message not found in log. Ignoring...", file=sys.stderr)
+                      f"but message not found in log. Ignoring...", file=sys.stderr, flush=True)
 
             log_file.seek(0)
             json.dump(message_list, log_file, indent=4)
@@ -237,13 +237,13 @@ def remove_reaction(payload):
                                 message.pop('reactions')
                     else:
                         print(f"Reaction {reaction} removed from message (ts={parent_ts}, channel={parent_channel_id}), "
-                              f"but not in message's reaction list. Ignoring...", file=sys.stderr)
+                              f"but not in message's reaction list. Ignoring...", file=sys.stderr, flush=True)
                 else:
                     print(f"Reaction {reaction} removed from message (ts={parent_ts}, channel={parent_channel_id}), "
-                          f"but message does not have reactions in log. Ignoring...", file=sys.stderr)
+                          f"but message does not have reactions in log. Ignoring...", file=sys.stderr, flush=True)
             else:
                 print(f"Reaction {reaction} removed from message (ts={parent_ts}, channel={parent_channel_id}), "
-                      f"but message not found. Ignoring...", file=sys.stderr)
+                      f"but message not found. Ignoring...", file=sys.stderr, flush=True)
 
             log_file.seek(0)
             json.dump(message_list, log_file, indent=4)
