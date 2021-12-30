@@ -1,70 +1,123 @@
-from display import FrameBuffer
+from threading import Thread
+from time import sleep
 
-class Pong:
-    def __init__(self):
-        self.fg = ':white_square:'
-        self.bg = ':black_square:'
+from util.pong import Pong
+from shared import app
 
-        self.w = 15
-        self.h = 15
-        self.paddlesize = 3
+slack_client = None
+slack_channel = None
+slack_ts = None
 
-        self.fb = FrameBuffer(self.w, self.h)
+p = Pong()
 
-        self.players = []
+def refresh():
+    global p, slack_client, slack_channel, slack_ts
+    cache = ""
+    while True:
+        screen = p.screen
+        if screen != cache:
+            cache = screen
+            slack_client.chat_update(
+                channel=slack_channel,
+                ts=slack_ts,
+                text=screen)
+        sleep(0.2)
 
-        self.p1 = self.h // 2 - self.paddlesize // 2
-        self.p2 = self.p1
 
-        self.vel = [0, 0]
-        self.reset_ball_pos()
+def tick_handler():
+    global p
+    while True:
+        sleep(0.6)
+        p.tick()
 
-        self.start = False
+thd_refresh = Thread(target=refresh)
+thd_tick = Thread(target=tick_handler)
 
-    def reset_ball_pos(self):
-        self.ball = [self.w // 2, self.h // 2]
 
-    def update_screen(self):
-        self.fb.reset_framebuffer(self.w, self.h)
-        for i in range(self.paddlesize):
-            self.fb.set_pixel(1, self.p1 + i, 'x')
-            self.fb.set_pixel(self.w - 2, self.p2 + i, 'x')
+@app.command("/pong")
+def pong(client, ack, body, say):
+    global p, slack_client, slack_channel, slack_ts
+    try:
+        say("pong")
+        data = say("loading...").data
 
-        self.fb.set_pixel(self.ball[0], self.ball[1], 'x')
+        slack_client = client
+        slack_channel = data['channel']
+        slack_ts = data['ts']
 
-    def collision_handler(self, px, py):
-        tmp_y = self.ball[1] + self.vel[1]
+        p.callback = say
 
-        if self.ball[0] == px and py <= tmp_y < py + self.paddlesize:
-            if tmp_y - py < self.paddlesize // 2:
-                self.vel[1] = -1
+        if not thd_refresh.is_alive():
+            thd_refresh.start()
+            thd_tick.start()
+
+        ack()
+    except Exception as e:
+        response = str(e)
+        ack(response)
+
+
+@app.command("/register")
+def register(client, ack, body, say):
+    global p
+    try:
+        if not p.start and len(p.players) < 2:
+            user = body['user_id']
+            if user not in p.players:
+                p.players.append(user)
+                say(f"<@{body['user_name']}> is now player {len(p.players)}")
+        ack()
+    except Exception as e:
+        response = str(e)
+        ack(response)
+
+
+@app.command("/start")
+def start(client, ack, body, say):
+    global p
+    try:
+        if len(p.players) < 2:
+            say("not enough players to start")
+        else:
+            p.reset_ball_pos()
+            p.start = True
+            p.vel = [1, 0]
+        ack()
+    except Exception as e:
+        response = str(e)
+        ack(response)
+
+@app.command("/u")
+def up(client, ack, body, say):
+    global p
+    try:
+        user = body['user_id']
+        if p.start and user in p.players:
+            if p.players.index(user):
+                if p.p2 > 1:
+                    p.p2 -= 1
             else:
-                self.vel[1] = 1
-            self.vel[0] *= -1
+                if p.p1 > 1:
+                    p.p1 -= 1
+        ack()
+    except Exception as e:
+        response = str(e)
+        ack(response)
 
-    def tick(self):
-        if not self.start:
-            return
 
-        self.ball[0] += self.vel[0]
-        self.ball[1] += self.vel[1]
-
-        # paddle 1 collision
-        self.collision_handler(2, self.p1)
-        self.collision_handler(self.w - 3, self.p2)
-
-        if self.ball[0] == 0:
-            self.start = False
-            self.callback(f"<@{self.players[1]}> wins!")
-
-        if self.ball[0] == self.w - 1:
-            self.start = False
-            self.callback(f"<@{self.players[0]}> wins!")
-
-        if self.ball[1] in [0, self.h - 1]:
-            self.vel[1] *= -1
-
-    @property
-    def screen(self):
-        self.update_screen()
-        return str(self.fb).replace('x', self.fg).replace('.', self.bg)
+@app.command("/d")
+def down(client, ack, body, say):
+    global p
+    try:
+        user = body['user_id']
+        if p.start and user in p.players:
+            if p.players.index(user):
+                if p.p2 < p.h - p.paddlesize:
+                    p.p2 += 1
+            else:
+                if p.p1 < p.h - p.paddlesize:
+                    p.p1 += 1
+        ack()
+    except Exception as e:
+        response = str(e)
+        ack(response)
