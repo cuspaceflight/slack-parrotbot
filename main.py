@@ -47,4 +47,3 @@ if __name__ == "__main__":
 		cursor = conversations['response_metadata']['next_cursor']
 
 	SocketModeHandler(app, config['slack_app_token']).start()
-
