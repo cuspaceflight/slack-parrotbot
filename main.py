@@ -5,10 +5,8 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 from shared import *
 
-import parrotmaker_slack
-import pong_slack
-import gdrive_slack
-import live_archive
+for feat in config['features_enabled']:
+	exec(f"import {feat}")
 
 print("Starting parrotbot...", flush=True)
 
@@ -48,5 +46,4 @@ if __name__ == "__main__":
 				print(f"Joined {chan['name']}", flush=True)
 		cursor = conversations['response_metadata']['next_cursor']
 
-	SocketModeHandler(app, open("/opt/slack-parrotbot/secrets/SLACK_APP_TOKEN").read()).start()
-
+	SocketModeHandler(app, config['slack_app_token']).start()
