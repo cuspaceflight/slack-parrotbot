@@ -8,7 +8,7 @@ from shared import *
 for feat in config['features_enabled']:
 	exec(f"import {feat}")
 
-print("Starting parrotbot...", flush=True)
+print("Starting parrotbot...", flush=True, file=info_stream)
 
 @app.command("/parrotcheckhealth")
 def parrotcheckhealth(client, ack, body, say):
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 		for chan in conversations['channels']:
 			if not (chan['is_im'] or chan['is_member'] or chan['is_archived']):
 				app.client.conversations_join(channel=chan['id'])
-				print(f"Joined {chan['name']}", flush=True)
+				print(f"Joined {chan['name']}", flush=True, file=info_stream)
 		cursor = conversations['response_metadata']['next_cursor']
 
 	SocketModeHandler(app, config['slack_app_token']).start()
