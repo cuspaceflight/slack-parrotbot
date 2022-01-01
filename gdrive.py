@@ -1,14 +1,13 @@
 import os
 from threading import Thread
 
-from shared import app, config
+from shared import *
 
 @app.event("file_shared")
 def handle_file_shared(client, event, say, ack):
 	file_data = client.files_info(file = event["file_id"]).data["file"]
 	user_data = client.users_info(user = event["user_id"]).data["user"]
-	print(datetime.now().isoformat(), ": File shared by ",
-		  user_data['real_name'], flush=True)
+	print("File shared by ", user_data['real_name'], flush=True, file=info_stream)
 
 	normalised_name = user_data['real_name'].replace(" ", "_")
 	dir_path = f"{config['gdrive']['local_path']}/{normalised_name}"
