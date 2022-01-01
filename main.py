@@ -27,7 +27,7 @@ def parrotcheckhealth(client, ack, body, say):
 
 	if "quiet" in body['text']:
 		ack("I'm running! Here is my latest log:" \
-			"\n```\n" + log_messages[-1] + '```')
+		    "\n```\n" + log_messages[-1] + '```')
 	else:
 		say("I'm running! Here is my log:")
 		for msg in log_messages:

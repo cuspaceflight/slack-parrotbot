@@ -4,10 +4,10 @@ import argparse
 from slack_bolt import App
 parser = argparse.ArgumentParser()
 parser.add_argument('--journald', action='store_true',
-					help='Use systemd journal outputs instead of stdout and stderr')
+                    help='Use systemd journal outputs instead of stdout and stderr')
 parser.add_argument('-c', '--config',
-					help='Specify a path for a config.yaml',
-					default='/etc/slack-parrotbot/config.yaml')
+                    help='Specify a path for a config.yaml',
+                    default='/etc/slack-parrotbot/config.yaml')
 args = parser.parse_args()
 
 if args.journald:
@@ -30,11 +30,11 @@ if args.config is not None:
 	config_file = args.config
 	if args.config == '/etc/slack-parrotbot/config.yaml':
 		print("No config file specified, defaulting to /etc/slack-parrotbot-config.yaml...",
-			  file = warn_stream)
+		      file = warn_stream)
 else:
 	print("argparse is broken, I am confused, abort.", file=err_stream)
 	raise SystemExit(1)
-	
+
 
 config = yaml.load(open(config_file), Loader=yaml.loader.FullLoader)
 
