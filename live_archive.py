@@ -23,7 +23,7 @@ def channel_id_to_name(channel_id):
 	"""Gets the current name of the channel with ID 'channel_id'"""
 	res = app.client.conversations_info(channel=channel_id)
 	if "ok" not in res.data or not res["ok"]:
-		print(f"Error message:{res}", file=sys.stderr, flush=True)
+		print(f"Error message:{res}", file=err_stream, flush=True)
 		raise ConnectionError(f"conversations_info(channel={channel_id}) web request failed")
 	channel_name = res["channel"]["name"]
 	return channel_name
@@ -111,7 +111,7 @@ def add_thread_reply(channel_id, thread_ts, reply_user, reply_ts):
 				# Though not sure how relevant this is, as slack-export-viewer does not seem to care
 		else:
 			print(f"Received reply to thread (channel={channel_id}, ts={reply_ts}) but have not found"
-			      f"original thread with ts = {thread_ts}.", file=sys.stderr, flush=True)
+			      f"original thread with ts = {thread_ts}.", file=err_stream, flush=True)
 		# Go back to start and write
 		log_file.seek(0)
 		json.dump(message_list, log_file, indent=4)
@@ -130,18 +130,20 @@ def rename_channel(channel_id, old_name, new_name):
 		else:
 			print(f"Renamed channel (id={channel_id}) from {old_name} to {new_name},"
 			      f"but have not found channel with id on channels.json",
-			      file=sys.stderr, flush=True)
+			      file=err_stream, flush=True)
 		channel_list.seek(0)
 		json.dump(old_channel_list, channel_list, indent=4)
 		channel_list.truncate()
 
-	print(f"Channel rename event from {old_name} to {new_name}", flush=True)
+	print(f"Channel rename event from {old_name} to {new_name}", flush=True,
+			file=info_stream)
 	if old_name is not None:
 		old_path = archive_path / old_name
 		new_path = archive_path / new_name
 		old_path.rename(new_path)
 	else:
-		print(f"Warning: Attempted to rename channel id {channel_id}, but it doesn't exist", flush=True)
+		print(f"Attempted to rename channel id {channel_id}, but it doesn't exist",
+		      flush=True, file=warn_stream)
 
 
 @app.event("channel_created")
@@ -153,17 +155,18 @@ def create_channel(client, payload):
 	# Get all detailed channel object
 	res = client.conversations_info(channel=channel_id)
 	if "ok" not in res.data or not res['ok']:
-		print(f"Error message: {res}", file=sys.stderr, flush=True)
+		print(f"Error message: {res}", file=err_stream, flush=True)
 		raise ConnectionError(f"Could not get channel info with id = {channel_id}")
 	full_channel_info = res["channel"]
 	if full_channel_info['is_channel']:
 		# Join channel if created
 		res = client.conversations_join(channel=channel_id)
 		if "ok" not in res.data or not res['ok']:
-			print(f"Error message: {res}", file=sys.stderr, flush=True)
+			print(f"Error message: {res}", file=err_stream, flush=True)
 			raise ConnectionError(f"Could not join channel with id = {channel_id}")
 
-		print(f'Channel {channel["name"]} created', flush=True)
+		print(f'Channel {channel["name"]} created', flush=True,
+		      file=info_stream)
 
 		channel_list_path = archive_path / "channels.json"
 		with open(channel_list_path, 'r+') as channel_list:
@@ -204,7 +207,7 @@ def add_reaction(payload):
 			else:
 				print(f"Reaction {reaction} added to message (ts={parent_ts}, channel={parent_channel_id}), "
 				      f"but message not found in log. Ignoring...",
-				      file=sys.stderr, flush=True)
+				      file=err_stream, flush=True)
 
 			log_file.seek(0)
 			json.dump(message_list, log_file, indent=4)
@@ -239,13 +242,16 @@ def remove_reaction(payload):
 								message.pop('reactions')
 					else:
 						print(f"Reaction {reaction} removed from message (ts={parent_ts}, channel={parent_channel_id}), "
-						      f"but not in message's reaction list. Ignoring...", file=sys.stderr, flush=True)
+						      f"but not in message's reaction list. Ignoring...",
+						      file=err_stream, flush=True)
 				else:
 					print(f"Reaction {reaction} removed from message (ts={parent_ts}, channel={parent_channel_id}), "
-					      f"but message does not have reactions in log. Ignoring...", file=sys.stderr, flush=True)
+					      f"but message does not have reactions in log. Ignoring...",
+					      file=err_stream, flush=True)
 			else:
 				print(f"Reaction {reaction} removed from message (ts={parent_ts}, channel={parent_channel_id}), "
-				      f"but message not found. Ignoring...", file=sys.stderr, flush=True)
+				      f"but message not found. Ignoring...",
+				      file=err_stream, flush=True)
 
 			log_file.seek(0)
 			json.dump(message_list, log_file, indent=4)
@@ -270,7 +276,8 @@ def add_to_archive(message):
 	# B) manage an internal Archive object which writes to disk periodically (say at the end of each day / every 100 message)
 	# B seems to be preferable at the moment to me
 
-	print(f"Attempting to acquire file lock for {current_day_path}, thread id = {get_ident()}", flush=True)
+	print(f"Attempting to acquire file lock for {current_day_path}, thread id = {get_ident()}",
+			file=debug_stream, flush=True)
 
 	# Lock file in case other threads try to write data to it at the same time
 	if current_day_path in file_locks:
@@ -279,7 +286,8 @@ def add_to_archive(message):
 		file_locks[current_day_path] = Lock()
 		file_locks[current_day_path].acquire()
 
-	print(f"Acquired file lock for {current_day_path}, thread id = {get_ident()}", flush=True)
+	print(f"Acquired file lock for {current_day_path}, thread id = {get_ident()}",
+			file=debug_stream, flush=True)
 
 	# Create file if it does not exist
 	if not current_day_path.is_file():
@@ -300,4 +308,5 @@ def add_to_archive(message):
 	# Release file lock
 	file_locks[current_day_path].release()
 
-	print(f"Released file lock for {current_day_path}, thread id = {get_ident()}", flush=True)
+	print(f"Released file lock for {current_day_path}, thread id = {get_ident()}",
+			file=debug_stream, flush=True)
