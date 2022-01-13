@@ -37,7 +37,7 @@ def log_file_path(channel_id, ts):
 @app.event("message")
 def archive_message(message):
 	"""Runs on every message event and archives it if it's not hidden"""
-	# print("Message received", flush=True)
+	print("Message received", flush=True, file=debug_stream)
 
 	# As message events are sent before 'channel_rename' events we're dealing with them here
 	# Otherwise the program would still need to handle it to put it in the correct folder
