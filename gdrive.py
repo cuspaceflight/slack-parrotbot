@@ -26,13 +26,14 @@ def download_file(client, dir_path, dir_nice_name, file_data, msg_data):
 		cd "{dir_path}"
 
 		wget --header="Authorization: Bearer {config['slack_bot_token']}"\
-			{file_data["url_private_download"]}
+			{file_data["url_private_download"]} >> /var/log/slack-parrotbot/wget-log
 
 		cd - >/dev/null
 
 		# wait for the last operation to finish
 		while pgrep rclone; do sleep 1; done
-		rclone sync {config['gdrive']['local_path']} {config['gdrive']['remote_path']}
+		rclone sync {config['gdrive']['local_path']} {config['gdrive']['remote_path']} \
+				>> /var/log/slack-parrotbot/rclone-log
 	'""")
 	client.chat_update(
 			channel  = msg_data['channel'],

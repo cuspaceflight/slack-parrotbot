@@ -29,7 +29,7 @@ else:
 if args.config is not None:
 	config_file = args.config
 	if args.config == '/etc/slack-parrotbot/config.yaml':
-		print("No config file specified, defaulting to /etc/slack-parrotbot-config.yaml...",
+		print("No config file specified, defaulting to /etc/slack-parrotbot/config.yaml...",
 		      file = warn_stream)
 else:
 	print("argparse is broken, I am confused, abort.", file=err_stream)
