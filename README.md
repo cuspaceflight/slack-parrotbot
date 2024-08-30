@@ -1,5 +1,5 @@
-# Slack parrotbot
-A collection of slack tools used on the CUSF workspace
+# Async ParrotBot
+An asynchronous rewrite of CUSF slack tools, which will eventually support multiple tools.
 
 ## Parrotmaker
 <pre>
@@ -11,17 +11,9 @@ use it with `/parrot message`
 ![parrotmaker example](parrotmaker_example.gif)
 
 ## PONG
-The world's worst video rendering system and... a playable version of PONG.
-![pong example](pong_example.png)
 
-**Usage**
-```
-/pong         setup game
-/register     register as a player
-/start        start game
-/u            move paddle up
-/d            move paddle down
-```
+Pong was removed as it would have been a bit annoying to reimplement for now.
+Something better will come, probably. I think. Maybe not, we'll see.
 
 ## Google Drive Auto Upload
 Literally the only thing useful about parrotbot. But it's boring so that's why
@@ -32,7 +24,7 @@ it's at the bottom.
 Something like:
 
 ```
-# cd /opt && git clone https://github.com/smh-my-head/slack-parrotbot
+# cd /opt && git clone https://github.com/smh-my-head/async-parrotbot
 # apt install rclone python3-pip
 # pip3 install slack_bolt
 # mkdir -p /var/opt/slack-parrotbot/files
@@ -100,8 +92,8 @@ s) Set configuration password
 q) Quit config
 e/n/d/r/c/s/q> q
 
-# rclone sync --drive-shared-with-me parrotbot-gdrive:CUSF/slack-staging /var/opt/slack-parrotbot/files
-# cp slack-parrotbot.service /etc/systemd/system/
+# rclone sync --drive-shared-with-me parrotbot-gdrive:CUSF/slack-staging /var/opt/async-parrotbot/files
+# cp async-parrotbot.service /etc/systemd/system/
 # systemctl daemon-reload
-# systemctl start slack-parrotbot
+# systemctl start async-parrotbot
 ```
