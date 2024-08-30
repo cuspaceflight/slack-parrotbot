@@ -7,7 +7,7 @@ CURRENT_MD5=""
 CURRENT_PATH=""
 
 # get hashes, and sort by hash
-find /var/opt/slack-parrotbot/files -type f | xargs md5sum | sort \
+find /var/opt/async-parrotbot/files -type f | xargs md5sum | sort \
 		| while read current_line
 do
     CURRENT_MD5=$(echo "$current_line" | awk '{print $1}')
@@ -43,5 +43,5 @@ rclone md5sum parrotbot-gdrive:slack-staging \
 done
 # }}}
 # Resync
-sudo rclone sync /var/opt/slack-parrotbot/files parrotbot-gdrive:slack-staging
+sudo rclone sync /var/opt/async-parrotbot/files parrotbot-gdrive:slack-staging
 

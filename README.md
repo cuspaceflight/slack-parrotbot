@@ -27,7 +27,7 @@ Something like:
 # cd /opt && git clone https://github.com/smh-my-head/async-parrotbot
 # apt install rclone python3-pip
 # pip3 install slack_bolt
-# mkdir -p /var/opt/slack-parrotbot/files
+# mkdir -p /var/opt/async-parrotbot/files
 # rclone config
 2021/04/26 12:19:08 NOTICE: Config file "/root/.config/rclone/rclone.conf" not found - using defaults
 No remotes found - make a new one
