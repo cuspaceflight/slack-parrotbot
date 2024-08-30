@@ -1,4 +1,3 @@
-import re
 from sys import argv
 
 from util.fontmap import fonts
@@ -6,11 +5,7 @@ from util.display import TextBuffer
 
 
 class ParrotMaker:
-	def __init__(self, fmap=fonts[0], max_width=30,
-		         bg=":fireparrot:", fg=":partyparrot:"):
-		self.fg = fg
-		self.bg = bg
-
+	def __init__(self, fmap=fonts[0], max_width=30,):
 		if not isinstance(fmap, dict):
 			raise TypeError("fmap must be a dict")
 		if not all(chr(x) in fmap for x in range(ord("A"), ord("Z") + 1)):
@@ -28,10 +23,9 @@ class ParrotMaker:
 
 		self.tb = TextBuffer(fmap, max_width)
 
-
-	def to_parrots(self, string):
+	def to_parrots(self, string, bg=":fireparrot:", fg=":partyparrot:"):
 		self.tb.update_text(string)
-		return str(self.tb).replace('x', self.fg).replace('.', self.bg)
+		return str(self.tb).replace('x', fg).replace('.', bg)
 
 
 if __name__ == "__main__":
@@ -41,4 +35,3 @@ if __name__ == "__main__":
 
 	pmaker = ParrotMaker()
 	print(pmaker.to_parrots(" ".join(argv[1:])))
-
