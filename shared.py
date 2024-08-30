@@ -1,7 +1,10 @@
-import yaml
+import asyncio
 import sys
 import argparse
-from slack_bolt import App
+
+import yaml
+from slack_bolt.app.async_app import AsyncApp
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--journald', action='store_true',
                     help='Use systemd journal outputs instead of stdout and stderr')
@@ -9,6 +12,21 @@ parser.add_argument('-c', '--config',
                     help='Specify a path for a config.yaml',
                     default='/etc/slack-parrotbot/config.yaml')
 args = parser.parse_args()
+
+async def async_check_output(cmd, **kwargs):
+	process = await asyncio.create_subprocess_shell(
+		cmd,
+		stdout=asyncio.subprocess.PIPE,
+		stderr=asyncio.subprocess.PIPE,
+		**kwargs
+	)
+	stdout, stderr = await process.communicate()
+	if process.returncode == 0:
+		return stdout
+	else:
+		print(f"Error occured while executing command "
+			  f"`{cmd}` during /parrotcheckhealth:", file=err_stream)
+		print(stderr, file=err_stream)
 
 if args.journald:
 	from systemd import journal
@@ -38,4 +56,4 @@ else:
 
 config = yaml.load(open(config_file), Loader=yaml.loader.FullLoader)
 
-app = App(token = config['slack_bot_token'])
+slack_app = AsyncApp(token = config['slack_bot_token'])
